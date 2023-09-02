@@ -1,0 +1,43 @@
+.sse-status {
+  padding: 1rem;
+}
+.navbar {
+  position: fixed;
+  z-index: 999;
+  display: flex;
+  list-style: none;
+  padding: 1.5rem;
+  align-items: center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #1a1a1a;
+}
+.navbar-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-right: 20px;
+}
+.navbar li {
+  margin-right: 10px;
+}
+
+ul {
+  margin: 0;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 14px;
+  height: 30px;
+}
+.not-connected {
+  background-color: #f44336;
+  color: white;
+}
+.connected {
+  background-color: #4caf50;
+  color: white;
+}
