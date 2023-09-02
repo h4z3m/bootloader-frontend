@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { StatusContext } from "../StatusContext/StatusContext";
 import "./Homepage.scss";
 
@@ -11,6 +11,7 @@ const Homepage = () => {
   const [response, setResponse] = useState("");
   const [binaryFile, setBinaryFile] = useState();
   const [version, setVersion] = useState("");
+  const server_url = import.meta.env.VITE_APP_API;
   const fromHex = (hex) => {
     return parseInt(hex, 16);
   };
@@ -26,7 +27,7 @@ const Homepage = () => {
   // };
   const readVersion = () => {
     axios
-      .get("http://localhost:3000/bl/version")
+      .get(`${server_url}/bl/version`)
       .then((response) => {
         console.log(response);
         setVersion(response.data.version);
@@ -43,7 +44,7 @@ const Homepage = () => {
     data.append("file", binaryFile);
     data.append("address", fromHex(flashAddress));
     axios
-      .post("http://localhost:3000/bl/flash", data)
+      .post(`${server_url}/bl/flash`, data)
       .then((response) => {
         console.log(response);
         setResponse(JSON.stringify(response.data));
@@ -61,7 +62,7 @@ const Homepage = () => {
       count: pageCount,
     };
     axios
-      .post("http://localhost:3000/bl/erase", data)
+      .post(`${server_url}/bl/erase`, data)
       .then((response) => {
         console.log(response);
         setResponse(response.data);

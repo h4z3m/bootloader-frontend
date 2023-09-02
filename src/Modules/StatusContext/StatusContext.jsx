@@ -7,16 +7,17 @@ const StatusProvider = ({ children }) => {
   const [listening, setListening] = useState(false);
   const [isBootloaderConnected, setBootloaderConnectionStatus] =
     useState(false);
+  const server_url = import.meta.env.VITE_APP_API;
 
   const checkBootloaderConnection = () => {
-    axios.get("http://localhost:3000/bl/status").then((response) => {
+    axios.get(`${server_url}/bl/status`).then((response) => {
       console.log(response);
       setBootloaderConnectionStatus(response.data.message === "Connected");
     });
   };
   useEffect(() => {
     if (!listening) {
-      const events = new EventSource("http://localhost:3000/events");
+      const events = new EventSource(`${server_url}/events`);
 
       events.onmessage = (event) => {
         const parsedData = JSON.parse(event.data);
