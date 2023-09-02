@@ -15,16 +15,7 @@ const Homepage = () => {
   const fromHex = (hex) => {
     return parseInt(hex, 16);
   };
-  // const handleHexInputChange = (event) => {
-  //   const inputValue = event.target.value;
-  //   const isValidHex = /^0x[0-9a-fA-F]*$/.test(inputValue);
 
-  //   if (isValidHex) {
-  //     event.target.value = inputValue.toUpperCase();
-  //   } else {
-  //     // Handle invalid input
-  //   }
-  // };
   const readVersion = () => {
     axios
       .get(`${server_url}/bl/version`)
