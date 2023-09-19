@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 const StatusContext = createContext();
 
@@ -12,7 +12,7 @@ const StatusProvider = ({ children }) => {
   const checkBootloaderConnection = () => {
     axios.get(`${server_url}/bl/status`).then((response) => {
       console.log(response);
-      setBootloaderConnectionStatus(response.data.message === "Connected");
+      setBootloaderConnectionStatus(response.data === "Connected");
     });
   };
   useEffect(() => {
@@ -20,13 +20,10 @@ const StatusProvider = ({ children }) => {
       const events = new EventSource(`${server_url}/events`);
 
       events.onmessage = (event) => {
-        const parsedData = JSON.parse(event.data);
+        console.log(event);
+        const parsedData = event.data;
         console.log(parsedData);
-        if (parsedData.type === "status") {
-          setBootloaderConnectionStatus(
-            parsedData.data.message === "Connected"
-          );
-        }
+        setBootloaderConnectionStatus(parsedData === "Connected");
       };
       events.onopen = () => {
         setListening(true);

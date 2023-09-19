@@ -1,11 +1,14 @@
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { StatusContext } from "../StatusContext/StatusContext";
 import "./Homepage.scss";
-
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { stackoverflowDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 const Homepage = () => {
   const [flashAddress, setFlashAddress] = useState("0x00000000");
   const [eraseAddress, setEraseAddress] = useState("0x00000000");
+  const [readAddress, setReadAddress] = useState("0x00000000");
+  const [readLength, setReadLength] = useState(0);
   const { listening, isBootloaderConnected } = useContext(StatusContext);
   const [pageCount, setPageCount] = useState(0);
   const [response, setResponse] = useState("");
@@ -22,23 +25,43 @@ const Homepage = () => {
       .then((response) => {
         console.log(response);
         setVersion(response.data.version);
-        setResponse(JSON.stringify(response.data));
+        setResponse(JSON.stringify(response.data, null, 2));
       })
       .catch((error) => {
         setResponse(error);
       });
   };
 
-  const flashUpload = (e) => {
+  const flashRead = (e) => {
+    e.preventDefault();
+    const data = {
+      address: fromHex(readAddress),
+      length: readLength,
+    };
+    console.log(data);
+    axios
+      .post(`${server_url}/bl/read`, data)
+      .then((response) => {
+        console.log(response);
+        setResponse(JSON.stringify(response.data, null, 2));
+      })
+      .catch((error) => {
+        setResponse(error);
+      });
+  };
+
+  const flashUpload = async (e) => {
     e.preventDefault();
     const data = new FormData();
     data.append("file", binaryFile);
     data.append("address", fromHex(flashAddress));
+
+    console.log(data);
     axios
       .post(`${server_url}/bl/flash`, data)
       .then((response) => {
         console.log(response);
-        setResponse(JSON.stringify(response.data));
+        setResponse(JSON.stringify(response.data, null, 2));
       })
       .catch((error) => {
         setResponse(error);
@@ -47,7 +70,6 @@ const Homepage = () => {
 
   const flashErase = (e) => {
     e.preventDefault();
-    console.log(eraseAddress);
     const data = {
       address: fromHex(eraseAddress),
       count: pageCount,
@@ -56,7 +78,21 @@ const Homepage = () => {
       .post(`${server_url}/bl/erase`, data)
       .then((response) => {
         console.log(response);
-        setResponse(response.data);
+        setResponse(JSON.stringify(response.data, null, 2));
+      })
+      .catch((error) => {
+        setResponse(error);
+      });
+  };
+
+  const jumpToApp = (e) => {
+    e.preventDefault();
+
+    axios
+      .post(`${server_url}/bl/jump`)
+      .then((response) => {
+        console.log(response);
+        setResponse(JSON.stringify(response.data, null, 2));
       })
       .catch((error) => {
         setResponse(error);
@@ -89,49 +125,6 @@ const Homepage = () => {
               <button onClick={readVersion}>Read version</button>
             </div>
 
-            <form
-              className="flash-section"
-              onSubmit={flashUpload}
-              encType="multipart/form-data"
-            >
-              <h3>Flash section</h3>
-              <div className="flash">
-                <label htmlFor="flash-address">Flash Address</label>
-                <input
-                  required
-                  className="flash-address"
-                  maxLength={10}
-                  ref={(target) => {
-                    if (target) {
-                      target.value = flashAddress;
-                    }
-                  }}
-                  pattern="^0x[0-9a-fA-F]*$"
-                  onChange={(e) => {
-                    const hexRegex = /0x[0-9A-Fa-f]+/;
-                    const input = e.target.value;
-                    if (hexRegex.test(input)) {
-                      const input = e.target.value;
-                      let modifiedInput = input.startsWith("0x")
-                        ? input
-                        : "0x" + input;
-
-                      e.target.value = modifiedInput;
-                      setFlashAddress(modifiedInput);
-                    }
-                  }}
-                ></input>
-              </div>
-
-              <div className="file-upload">
-                <label htmlFor="file-upload">Binary file</label>
-                <input required type="file" onChange={handleFileUpload} />
-                {binaryFile ? (
-                  <label>Size: {binaryFile?.size} bytes</label>
-                ) : null}
-              </div>
-              <button type="submit">Upload</button>
-            </form>
             <form className="erase-section card2" onSubmit={flashErase}>
               <h3>Erase section</h3>
               <div className="erase">
@@ -183,20 +176,115 @@ const Homepage = () => {
               </div>
               <button type="submit">Erase</button>
             </form>
-            <form className="jump-app">
+
+            <form className="read-mem-section card2" onSubmit={flashRead}>
+              <h3>Read memory section</h3>
+              <div className="read">
+                <label htmlFor="read-address">Read Address</label>
+                <input
+                  required
+                  className="read-address"
+                  maxLength={10}
+                  ref={(target) => {
+                    if (target) {
+                      target.value = readAddress;
+                    }
+                  }}
+                  value={readAddress}
+                  pattern="^0x[0-9a-fA-F]*$"
+                  onChange={(e) => {
+                    const hexRegex = /0x[0-9A-Fa-f]+/;
+                    const input = e.target.value;
+                    if (hexRegex.test(input)) {
+                      const input = e.target.value;
+                      let modifiedInput = input.startsWith("0x")
+                        ? input
+                        : "0x" + input;
+
+                      // e.target.value = modifiedInput;
+                      setReadAddress(modifiedInput);
+                    }
+                  }}
+                ></input>
+              </div>
+              <div className="read-length">
+                <label htmlFor="read-length">Length</label>
+                <input
+                  required
+                  className="read-length"
+                  max={0x8000}
+                  min={0}
+                  type="number"
+                  onChange={(event) => {
+                    let { value, min, max } = event.target;
+                    value = Math.max(
+                      Number(min),
+                      Math.min(Number(max), Number(value))
+                    );
+                    event.target.value = value;
+                    setReadLength(value);
+                  }}
+                ></input>
+              </div>
+              <button type="submit">Read</button>
+            </form>
+            <form
+              className="flash-section"
+              onSubmit={flashUpload}
+              encType="multipart/form-data"
+            >
+              <h3>Flash section</h3>
+              <div className="flash">
+                <label htmlFor="flash-address">Flash Address</label>
+                <input
+                  required
+                  className="flash-address"
+                  maxLength={10}
+                  ref={(target) => {
+                    if (target) {
+                      target.value = flashAddress;
+                    }
+                  }}
+                  pattern="^0x[0-9a-fA-F]*$"
+                  onChange={(e) => {
+                    const hexRegex = /0x[0-9A-Fa-f]+/;
+                    const input = e.target.value;
+                    if (hexRegex.test(input)) {
+                      const input = e.target.value;
+                      let modifiedInput = input.startsWith("0x")
+                        ? input
+                        : "0x" + input;
+
+                      e.target.value = modifiedInput;
+                      setFlashAddress(modifiedInput);
+                    }
+                  }}
+                ></input>
+              </div>
+
+              <div className="file-upload">
+                <label htmlFor="file-upload">Binary file</label>
+                <input required type="file" onChange={handleFileUpload} />
+                {binaryFile ? (
+                  <label>Size: {binaryFile?.size} bytes</label>
+                ) : null}
+              </div>
+              <button type="submit">Upload</button>
+            </form>
+            <form className="jump-app" onSubmit={jumpToApp}>
               <h3>Jump to App section</h3>
               <button>Jump to application</button>
             </form>
           </section>
           <section className="response-section">
-            <label>Raw response</label>
-            <input
+            <h4>Raw response</h4>
+            <SyntaxHighlighter
+              language="json"
+              style={stackoverflowDark}
               className="response"
-              type="text"
-              onChange={(e) => setResponse(e.target.value)}
-              disabled
-              value={response}
-            ></input>
+            >
+              {response ? response : null}
+            </SyntaxHighlighter>
           </section>
         </>
       ) : null}

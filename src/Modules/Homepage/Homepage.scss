@@ -24,6 +24,20 @@
   display: flex;
   height: 200px;
 }
+.response {
+  height: auto;
+  width: 100%;
+  text-align: left;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.response:hover {
+  border: 1px solid #646cff;
+  transform: scale(0.99);
+  background-color: #1a1a1a;
+}
+
 .version {
   border: 1px solid #646cff;
   border-radius: 10%;
@@ -56,6 +70,14 @@
   gap: 1rem;
 }
 .erase-section {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  flex: 5;
+  gap: 1rem;
+}
+
+.read-mem-section {
   display: flex;
   flex-direction: column;
   text-align: left;
